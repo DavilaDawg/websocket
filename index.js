@@ -52,13 +52,14 @@ const handleMessage = (bytes, uuid) => {
       });
     } else {
       user.state = {
+        ...user.state,
         x: message.x,
         y: message.y,
-        cursor: message.cursor,
-        username: message.username, // SHOULD BE NICKNAME
-        nickname: message.nickname,
-        pfp: message.pfp,
-        color: message.color,
+        cursor: message.cursor || user.state.cursor,
+        username: message.username, // SHOULD BE NICKNAME??
+        nickname: message.nickname || user.state.nickname,
+        pfp: message.pfp || user.state.pfp,
+        color: message.color || user.state.color,
       };
       broadcastState();
     }
