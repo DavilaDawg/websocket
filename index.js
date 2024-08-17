@@ -7,7 +7,7 @@ const url = require("url");
 
 const server = http.createServer();
 const wsServer = new WebSocketServer({ server });
-const port = 8000;
+const port = process.env.PORT || 8000;
 
 const connections = {};
 const users = {};
@@ -102,6 +102,6 @@ wsServer.on("connection", (connection, request) => {
   });
 });
 
-server.listen(port, () => {
+server.listen(port, '0,0,0,0', () => {
   console.log(`Websocket server is running on port ${port}`);
 });
