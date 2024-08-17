@@ -40,6 +40,8 @@ const handleMessage = (bytes, uuid) => {
 
     if (message.type === "setUsername") {
       user.username = message.username;
+      user.pfp = message.pfp;
+      user.nickname = message.nickname;
       broadcast({
         type: "join",
         username: user.username,
