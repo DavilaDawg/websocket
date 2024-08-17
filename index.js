@@ -43,6 +43,8 @@ const handleMessage = (bytes, uuid) => {
       broadcast({
         type: "join",
         username: user.username,
+        pfp: user.pfp, 
+        nickname: user.nickname,
       });
     } else if (message.type === "chat") {
       broadcast({
@@ -50,10 +52,6 @@ const handleMessage = (bytes, uuid) => {
         username: user.username,
         message: message.message,
       });
-    } else if (message.type === "pfp_nickname") {
-      user.pfp = message.pfp;
-      user.nickname = message.nickname;
-      broadcastState();
     } else {
       user.state = {
         x: message.x,
