@@ -102,6 +102,6 @@ wsServer.on("connection", (connection, request) => {
   });
 });
 
-server.listen(port, '0,0,0,0', () => {
+server.listen(port, '0.0.0.0', () => {
   console.log(`Websocket server is running on port ${port}`);
 });
