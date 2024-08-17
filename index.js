@@ -6,9 +6,9 @@ const uuidv4 = require("uuid").v4;
 const url = require("url");
 
 const server = http.createServer((req, res) => {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('WebSocket server is running');
-  });
+  res.writeHead(200, { "Content-Type": "text/plain" });
+  res.end("WebSocket server is running");
+});
 const wsServer = new WebSocketServer({ server });
 const port = process.env.PORT || 8000;
 
@@ -56,13 +56,15 @@ const handleMessage = (bytes, uuid) => {
         x: message.x,
         y: message.y,
         cursor: message.cursor || user.state.cursor,
-        username: message.username, // SHOULD BE NICKNAME??
+        username: user.username, //???
         nickname: message.nickname || user.state.nickname,
         pfp: message.pfp || user.state.pfp,
         color: message.color || user.state.color,
       };
       broadcastState();
     }
+    console.log("Received message:", message);
+    console.log("Updated user state:", user.state);
   } catch (error) {
     console.error("Error parsing message:", error);
   }
@@ -109,6 +111,6 @@ wsServer.on("connection", (connection, request) => {
   });
 });
 
-server.listen(port, '0.0.0.0', () => {
+server.listen(port, "0.0.0.0", () => {
   console.log(`Websocket server is running on port ${port}`);
 });
