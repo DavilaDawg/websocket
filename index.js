@@ -50,6 +50,10 @@ const handleMessage = (bytes, uuid) => {
         username: user.username,
         message: message.message,
       });
+    } else if (message.type === "pfp_nickname") {
+      user.pfp = message.pfp;
+      user.nickname = message.nickname;
+      broadcastState();
     } else {
       user.state = {
         x: message.x,
