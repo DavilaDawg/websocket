@@ -39,15 +39,14 @@ const handleMessage = (bytes, uuid) => {
     const user = users[uuid];
 
     if (message.type === "setUsername") {
-      user.username = message.username;
-      user.pfp = message.pfp;
-      user.nickname = message.nickname;
-      broadcast({
-        type: "join",
-        username: user.username,
-        pfp: user.pfp, 
-        nickname: user.nickname,
-      });
+      users[uuid] = {
+        ...user,
+        username: message.username,
+        pfp: message.pfp,
+        nickname: message.nickname,
+      };
+
+      broadcastState();
     } else if (message.type === "chat") {
       broadcast({
         type: "chat",
@@ -64,7 +63,6 @@ const handleMessage = (bytes, uuid) => {
       };
       broadcastState();
     }
-
   } catch (error) {
     console.error("Error parsing message:", error);
   }
