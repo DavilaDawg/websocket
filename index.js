@@ -57,8 +57,6 @@ const handleMessage = (bytes, uuid) => {
         y: message.y,
         cursor: message.cursor || user.state.cursor,
         username: message.username || user.state.username,
-        pfp: message.pfp || user.state.pfp,
-        nickname: message.nickname || user.state.nickname,
         color: message.color || user.state.color,
       };
       broadcastState();
