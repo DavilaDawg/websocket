@@ -60,8 +60,7 @@ const handleMessage = (bytes, uuid) => {
       };
       broadcastState();
     }
-    console.log("Received message:", message);
-    console.log("Updated user state:", user.state);
+
   } catch (error) {
     console.error("Error parsing message:", error);
   }
