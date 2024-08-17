@@ -56,6 +56,7 @@ const handleMessage = (bytes, uuid) => {
         y: message.y,
         cursor: message.cursor,
         username: message.username, // SHOULD BE NICKNAME
+        nickname: message.nickname,
         pfp: message.pfp,
         color: message.color,
       };
@@ -92,7 +93,7 @@ wsServer.on("connection", (connection, request) => {
       cursor: selectedCursor || "/default.png",
       color: color || "blue",
       pfp: pfp || null,
-      nickname: nickname || null,
+      nickname: nickname || "nickname",
     },
   };
 
