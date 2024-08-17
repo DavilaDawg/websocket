@@ -56,6 +56,7 @@ const handleMessage = (bytes, uuid) => {
         y: message.y,
         cursor: message.cursor,
         username: message.username, // SHOULD BE NICKNAME
+        pfp: message.pfp,
         color: message.color,
       };
       broadcastState();
@@ -74,7 +75,7 @@ const handleClose = (uuid) => {
 
 wsServer.on("connection", (connection, request) => {
   // ws://10.10.22.20:8000?username=Alex
-  const { selectedCursor, color, username } = url.parse(
+  const { selectedCursor, color, username, pfp, nickname } = url.parse(
     request.url,
     true
   ).query;
@@ -85,12 +86,13 @@ wsServer.on("connection", (connection, request) => {
 
   users[uuid] = {
     username, // this is acutally username now :)
-    realUsername: null,  // CHANGE TO NICKNAME 
     state: {
       x: 0,
       y: 0,
       cursor: selectedCursor || "/default.png",
       color: color || "blue",
+      pfp: pfp || null,
+      nickname: nickname || null,
     },
   };
 
