@@ -89,14 +89,14 @@ wsServer.on("connection", (connection, request) => {
   connections[uuid] = connection;
 
   users[uuid] = {
-    username, // this is acutally username now :)
+    username,
+    pfp,
+    nickname,
     state: {
       x: 0,
       y: 0,
       cursor: selectedCursor || "/default.png",
       color: color || "blue",
-      pfp: pfp || null,
-      nickname: nickname || "nickname",
     },
   };
 
