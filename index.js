@@ -52,7 +52,6 @@ const handleMessage = (bytes, uuid) => {
       });
     } else {
       user.state = {
-        ...user.state,
         x: message.x,
         y: message.y,
         cursor: message.cursor || user.state.cursor,
