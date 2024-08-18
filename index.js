@@ -52,13 +52,6 @@ const handleMessage = (bytes, uuid) => {
         username: user.username,
         message: message.message,
       });
-    } else if (message.type === "footer") {
-      broadcast({
-        type: "footer",
-        username: user.username,
-        nickname: message.nickname,
-        pfp: message.pfp
-      });
     } else {
       user.pfp= message.pfp || user.pfp;
       user.nickname= message.nickname || user.nickname;
