@@ -54,6 +54,8 @@ const handleMessage = (bytes, uuid) => {
         message: message.message,
       });
     } else {
+      user.pfp= message.pfp || user.pfp;
+      user.nickname= message.nickname || user.nickname;
       user.state = {
         x: message.x,
         y: message.y,
