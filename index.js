@@ -45,13 +45,19 @@ const handleMessage = (bytes, uuid) => {
         pfp: message.pfp,
         nickname: message.nickname,
       };
-
       broadcastState();
     } else if (message.type === "chat") {
       broadcast({
         type: "chat",
         username: user.username,
         message: message.message,
+      });
+    } else if (message.type === "footer") {
+      broadcast({
+        type: "footer",
+        username: user.username,
+        nickname: message.nickname,
+        pfp: message.pfp
       });
     } else {
       user.pfp= message.pfp || user.pfp;
