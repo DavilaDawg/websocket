@@ -37,7 +37,11 @@ const broadcastToAll = (message) => {
 };
 
 const broadcastToRoom = (roomId, message) => {
+  console.log("broadcasting to room")
   const messageString = JSON.stringify(message)
+
+  console.log("message: ", messageString)
+
   Object.values(connections).forEach((connection, uuid)=> { 
     if (users[uuid].room === roomId) {
       connection.send(messageString);
@@ -59,6 +63,7 @@ const handleMessage = (bytes, uuid, spaceId) => {
       };
       broadcastState();
     } else if (message.type === "chat") {
+      console.log("about to broadcast")
       broadcastToRoom(spaceId, {
         type: "chat",
         username: user.username,
@@ -100,7 +105,7 @@ wsServer.on("connection", (connection, request) => {
 
   // Add users websocket connection to the connections array
   connections[uuid] = connection;
-
+  console.log("spaceId: ", spaceId)
   // Create the corresponding user
   users[uuid] = {
     room: spaceId,
