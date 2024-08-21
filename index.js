@@ -125,7 +125,7 @@ const interval = setInterval(function ping() {
     ws.isAlive = false;
     ws.ping();
   });
-}, 30);
+}, 3000);
 
 wsServer.on('close', function close() {
   clearInterval(interval);
