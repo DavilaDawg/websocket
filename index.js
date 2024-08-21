@@ -12,6 +12,9 @@ const server = http.createServer((req, res) => {
 const wsServer = new WebSocketServer({ server });
 const port = process.env.PORT || 8000;
 
+/**
+ * @type{Websocket[]}
+ */
 const connections = {};
 const users = {};
 
@@ -25,7 +28,7 @@ const broadcastState = () => {
   });
 };
 
-const broadcast = (message) => {
+const broadcastToAll = (message) => {
   const messageString = JSON.stringify(message);
   // biome-ignore lint/complexity/noForEach: <explanation>
   Object.values(connections).forEach((connection) => {
@@ -33,7 +36,16 @@ const broadcast = (message) => {
   });
 };
 
-const handleMessage = (bytes, uuid) => {
+const broadcastToRoom = (roomId, message) => {
+  const messageString = JSON.stringify(message)
+  Object.values(connections).forEach((connection, uuid)=> { 
+    if (users[uuid].room === roomId) {
+      connection.send(messageString);
+    }
+  })
+};
+
+const handleMessage = (bytes, uuid, spaceId) => {
   try {
     const message = JSON.parse(bytes.toString());
     const user = users[uuid];
@@ -47,15 +59,15 @@ const handleMessage = (bytes, uuid) => {
       };
       broadcastState();
     } else if (message.type === "chat") {
-      broadcast({
+      broadcastToRoom(spaceId, {
         type: "chat",
         username: user.username,
         message: message.message,
         time: message.time,
       });
     } else {
-      user.pfp= message.pfp || user.pfp;
-      user.nickname= message.nickname || user.nickname;
+      user.pfp = message.pfp || user.pfp;
+      user.nickname = message.nickname || user.nickname;
       user.state = {
         x: message.x,
         y: message.y,
@@ -78,20 +90,25 @@ const handleClose = (uuid) => {
 };
 
 wsServer.on("connection", (connection, request) => {
-  const { selectedCursor, color, username, pfp, nickname } = url.parse(
+  const { selectedCursor, color, username, pfp, nickname, spaceId } = url.parse(
     request.url,
     true
   ).query;
+  // Generate a UUID for the user and its websocket connection
   const uuid = uuidv4();
   console.log(`${username} connected`);
 
+  // Add users websocket connection to the connections array
   connections[uuid] = connection;
 
+  // Create the corresponding user
   users[uuid] = {
+    room: spaceId,
     username,
-    pfp,
+    pfp, // pfp: Profile Picture
     nickname,
     state: {
+      // Holds the state of the users cursor
       x: 0,
       y: 0,
       cursor: selectedCursor || "/default.png",
@@ -99,12 +116,12 @@ wsServer.on("connection", (connection, request) => {
     },
   };
 
-  connection.on("message", (message) => handleMessage(message, uuid));
+  connection.on("message", (message) => handleMessage(message, uuid, spaceId));
   connection.on("close", () => handleClose(uuid));
 
   connection.send(JSON.stringify({ type: "userState", users }));
 
-  broadcast({
+  broadcastToAll({
     type: "join",
     username: username,
   });
