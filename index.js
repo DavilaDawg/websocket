@@ -12,8 +12,35 @@ const server = http.createServer((req, res) => {
 const wsServer = new WebSocketServer({ server });
 const port = process.env.PORT || 8000;
 
+const rooms = new Map();
 const connections = {};
 const users = {};
+
+const joinRoom = (ws, roomId) => {
+  if (!rooms.has(roomId)) {
+    rooms.set(roomId, new Set());
+  }
+  rooms.get(roomId).add(ws);
+
+  ws.on("close", () => {
+    rooms.get(roomId).delete(ws);
+    if (rooms.get(roomId).size === 0) {
+      rooms.delete(roomId);
+    }
+  });
+};
+
+const broadcastToRoom = (roomId, message) => {
+  if (rooms.has(roomId)) {
+    const clients = rooms.get(roomId);
+    // biome-ignore lint/complexity/noForEach: <explanation>
+    clients.forEach((ws) => {
+      if (ws.readyState === ws.OPEN) {
+        ws.send(message);
+      }
+    });
+  }
+};
 
 // every time server recieves message broadcast list of users to everyone, shows whos online and their state
 const broadcastState = () => {
@@ -22,14 +49,6 @@ const broadcastState = () => {
     const connection = connections[uuid];
     const message = JSON.stringify(users);
     connection.send(message);
-  });
-};
-
-const broadcast = (message) => {
-  const messageString = JSON.stringify(message);
-  // biome-ignore lint/complexity/noForEach: <explanation>
-  Object.values(connections).forEach((connection) => {
-    connection.send(messageString);
   });
 };
 
@@ -47,15 +66,18 @@ const handleMessage = (bytes, uuid) => {
       };
       broadcastState();
     } else if (message.type === "chat") {
-      broadcast({
-        type: "chat",
-        username: user.username,
-        message: message.message,
-        time: message.time,
-      });
+      broadcastToRoom(
+        message.roomId,
+        JSON.stringify({
+          type: "chat",
+          username: user.username,
+          message: message.message,
+          time: message.time,
+        })
+      );
     } else {
-      user.pfp= message.pfp || user.pfp;
-      user.nickname= message.nickname || user.nickname;
+      user.pfp = message.pfp || user.pfp;
+      user.nickname = message.nickname || user.nickname;
       user.state = {
         x: message.x,
         y: message.y,
@@ -79,10 +101,11 @@ const handleClose = (uuid) => {
 
 wsServer.on("connection", (connection, request) => {
   // ws://10.10.22.20:8000?username=Alex
-  const { selectedCursor, color, username, pfp, nickname } = url.parse(
+  const { selectedCursor, color, username, pfp, nickname, roomId } = url.parse(
     request.url,
     true
   ).query;
+
   const uuid = uuidv4();
   console.log(`${username} connected`);
 
@@ -100,15 +123,14 @@ wsServer.on("connection", (connection, request) => {
     },
   };
 
+  if (roomId) {
+    joinRoom(connection, roomId);
+  }
+
   connection.on("message", (message) => handleMessage(message, uuid));
   connection.on("close", () => handleClose(uuid));
 
   connection.send(JSON.stringify({ type: "userState", users }));
-
-  broadcast({
-    type: "join",
-    username: username,
-  });
 });
 
 server.listen(port, "0.0.0.0", () => {
