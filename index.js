@@ -15,10 +15,6 @@ const port = process.env.PORT || 8000;
 const connections = {};
 const users = {};
 
-function heartbeat() {
-  this.isAlive = true;
-}
-
 // every time server recieves message broadcast list of users to everyone, shows whos online and their state
 const broadcastState = () => {
   // biome-ignore lint/complexity/noForEach: <explanation>
@@ -58,8 +54,8 @@ const handleMessage = (bytes, uuid) => {
         time: message.time,
       });
     } else {
-      user.pfp = message.pfp || user.pfp;
-      user.nickname = message.nickname || user.nickname;
+      user.pfp= message.pfp || user.pfp;
+      user.nickname= message.nickname || user.nickname;
       user.state = {
         x: message.x,
         y: message.y,
@@ -89,10 +85,6 @@ wsServer.on("connection", (connection, request) => {
   const uuid = uuidv4();
   console.log(`${username} connected`);
 
-  connection.isAlive = true;
-  connection.on('pong', heartbeat);
-
-
   connections[uuid] = connection;
 
   users[uuid] = {
@@ -116,19 +108,6 @@ wsServer.on("connection", (connection, request) => {
     type: "join",
     username: username,
   });
-});
-
-const interval = setInterval(function ping() {
-  // biome-ignore lint/complexity/noForEach: <explanation>
-  Object.values(connections).forEach(function each(ws) {
-    if (ws.isAlive === false) return ws.terminate();
-    ws.isAlive = false;
-    ws.ping();
-  });
-}, 3000);
-
-wsServer.on('close', function close() {
-  clearInterval(interval);
 });
 
 server.listen(port, "0.0.0.0", () => {
