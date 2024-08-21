@@ -97,15 +97,6 @@ const handleClose = (uuid) => {
   delete connections[uuid];
   delete users[uuid];
 
-  for (const [roomId, clients] of rooms.entries()) {
-    if (clients.has(connections[uuid])) {
-      clients.delete(connections[uuid]);
-      if (clients.size === 0) {
-        rooms.delete(roomId);
-      }
-    }
-  }
-  
   broadcastState();
 };
 
