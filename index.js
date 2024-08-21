@@ -12,35 +12,12 @@ const server = http.createServer((req, res) => {
 const wsServer = new WebSocketServer({ server });
 const port = process.env.PORT || 8000;
 
-const rooms = new Map();
 const connections = {};
 const users = {};
 
-const joinRoom = (ws, roomId) => {
-  if (!rooms.has(roomId)) {
-    rooms.set(roomId, new Set());
-  }
-  rooms.get(roomId).add(ws);
-
-  ws.on("close", () => {
-    rooms.get(roomId).delete(ws);
-    if (rooms.get(roomId).size === 0) {
-      rooms.delete(roomId);
-    }
-  });
-};
-
-const broadcastToRoom = (roomId, message) => {
-  if (rooms.has(roomId)) {
-    const clients = rooms.get(roomId);
-    // biome-ignore lint/complexity/noForEach: <explanation>
-    clients.forEach((ws) => {
-      if (ws.readyState === ws.OPEN) {
-        ws.send(message);
-      }
-    });
-  }
-};
+function heartbeat() {
+  this.isAlive = true;
+}
 
 // every time server recieves message broadcast list of users to everyone, shows whos online and their state
 const broadcastState = () => {
@@ -52,7 +29,15 @@ const broadcastState = () => {
   });
 };
 
-const handleMessage = (bytes, uuid, setMessages) => {
+const broadcast = (message) => {
+  const messageString = JSON.stringify(message);
+  // biome-ignore lint/complexity/noForEach: <explanation>
+  Object.values(connections).forEach((connection) => {
+    connection.send(messageString);
+  });
+};
+
+const handleMessage = (bytes, uuid) => {
   try {
     const message = JSON.parse(bytes.toString());
     const user = users[uuid];
@@ -66,15 +51,12 @@ const handleMessage = (bytes, uuid, setMessages) => {
       };
       broadcastState();
     } else if (message.type === "chat") {
-      const chatMessage = {
+      broadcast({
         type: "chat",
         username: user.username,
         message: message.message,
         time: message.time,
-        roomId: message.roomId,
-      };
-      setMessages((prevMessages) => [...prevMessages, chatMessage]);
-      broadcastToRoom(message.roomId, JSON.stringify(chatMessage));
+      });
     } else {
       user.pfp = message.pfp || user.pfp;
       user.nickname = message.nickname || user.nickname;
@@ -96,19 +78,20 @@ const handleClose = (uuid) => {
   console.log(`${users[uuid].username} disconnected`);
   delete connections[uuid];
   delete users[uuid];
-
   broadcastState();
 };
 
 wsServer.on("connection", (connection, request) => {
-  // ws://10.10.22.20:8000?username=Alex
-  const { selectedCursor, color, username, pfp, nickname, roomId } = url.parse(
+  const { selectedCursor, color, username, pfp, nickname } = url.parse(
     request.url,
     true
   ).query;
-
   const uuid = uuidv4();
   console.log(`${username} connected`);
+
+  connection.isAlive = true;
+  connection.on('pong', heartbeat);
+
 
   connections[uuid] = connection;
 
@@ -124,14 +107,28 @@ wsServer.on("connection", (connection, request) => {
     },
   };
 
-  if (roomId) {
-    joinRoom(connection, roomId);
-  }
-
-  connection.on("message", (message) => handleMessage(message, uuid, setMessages));
+  connection.on("message", (message) => handleMessage(message, uuid));
   connection.on("close", () => handleClose(uuid));
 
   connection.send(JSON.stringify({ type: "userState", users }));
+
+  broadcast({
+    type: "join",
+    username: username,
+  });
+});
+
+const interval = setInterval(function ping() {
+  // biome-ignore lint/complexity/noForEach: <explanation>
+  Object.values(connections).forEach(function each(ws) {
+    if (ws.isAlive === false) return ws.terminate();
+    ws.isAlive = false;
+    ws.ping();
+  });
+}, 30000);
+
+wsServer.on('close', function close() {
+  clearInterval(interval);
 });
 
 server.listen(port, "0.0.0.0", () => {
