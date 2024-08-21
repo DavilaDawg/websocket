@@ -51,6 +51,7 @@ const handleMessage = (bytes, uuid) => {
         type: "chat",
         username: user.username,
         message: message.message,
+        time: message.time,
       });
     } else {
       user.pfp= message.pfp || user.pfp;
