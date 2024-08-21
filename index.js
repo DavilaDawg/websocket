@@ -52,7 +52,7 @@ const broadcastState = () => {
   });
 };
 
-const handleMessage = (bytes, uuid) => {
+const handleMessage = (bytes, uuid, setMessages) => {
   try {
     const message = JSON.parse(bytes.toString());
     const user = users[uuid];
@@ -128,7 +128,7 @@ wsServer.on("connection", (connection, request) => {
     joinRoom(connection, roomId);
   }
 
-  connection.on("message", (message) => handleMessage(message, uuid));
+  connection.on("message", (message) => handleMessage(message, uuid, setMessages));
   connection.on("close", () => handleClose(uuid));
 
   connection.send(JSON.stringify({ type: "userState", users }));
