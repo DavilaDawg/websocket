@@ -66,15 +66,15 @@ const handleMessage = (bytes, uuid) => {
       };
       broadcastState();
     } else if (message.type === "chat") {
-      broadcastToRoom(
-        message.roomId,
-        JSON.stringify({
-          type: "chat",
-          username: user.username,
-          message: message.message,
-          time: message.time,
-        })
-      );
+      const chatMessage = {
+        type: "chat",
+        username: user.username,
+        message: message.message,
+        time: message.time,
+        roomId: message.roomId,
+      };
+      setMessages((prevMessages) => [...prevMessages, chatMessage]);
+      broadcastToRoom(message.roomId, JSON.stringify(chatMessage));
     } else {
       user.pfp = message.pfp || user.pfp;
       user.nickname = message.nickname || user.nickname;
